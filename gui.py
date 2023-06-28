@@ -11,12 +11,12 @@ dragging = False
 # mvFormat_Float_rgb not currently supported on macOS
 # More details: https://dearpygui.readthedocs.io/en/latest/documentation/textures.html#formats
 texture_format = dpg.mvFormat_Float_rgba
-image_width, image_height, rgb_channel, rgba_channel = 256, 256, 3, 4
+image_width, image_height, rgb_channel, rgba_channel = 512, 512, 3, 4
 image_pixels = image_height * image_width
 model = DragDiffusion('cpu')
 
 dpg.create_context()
-dpg.create_viewport(title='DragDiffusion', width=800, height=650)
+dpg.create_viewport(title='DragDiffusion', width=815, height=650)
 
 raw_data_size = image_width * image_height * rgba_channel
 raw_data = array('f', [1] * raw_data_size)
@@ -36,6 +36,7 @@ def update_image(new_image):
 
 def generate_image(sender, app_data, user_data):
     seed = dpg.get_value('seed')
+    text = dpg.get_value('text')
     image = model.generate_image(seed)
     update_image(image)
 
@@ -60,7 +61,7 @@ def dragging_thread():
 width, height = 260, 200
 posx, posy = 0, 0
 with dpg.window(
-    label='Network & Latent', width=width, height=height, pos=(posx, posy),
+    label='Latent', width=width, height=height, pos=(posx, posy),
     no_move=True, no_close=True, no_collapse=True, no_resize=True,
 ):
     dpg.add_text('device', pos=(5, 20))
@@ -69,7 +70,7 @@ with dpg.window(
         callback=change_device,
     )
 
-    dpg.add_text('weight', pos=(5, 40))
+    dpg.add_text('cache', pos=(5, 40))
 
     def select_cb(sender, app_data):
         selections = app_data['selections']
@@ -86,10 +87,7 @@ with dpg.window(
         cancel_callback=cancel_cb, width=700 ,height=400
     ):
         dpg.add_file_extension('.*')
-    dpg.add_button(
-        label="select weight", callback=lambda: dpg.show_item("weight selector"),
-        pos=(70, 40),
-    )
+    dpg.add_input_text(tag='cache_dir', width=100, pos=(70, 40), default_value='./')
 
     dpg.add_text('latent', pos=(5, 60))
     dpg.add_input_int(
@@ -98,11 +96,10 @@ with dpg.window(
     dpg.add_input_float(
         label='step size', width=54, pos=(70, 80), step=-1, default_value=0.002,
     )
-    dpg.add_button(label="reset", width=54, pos=(70, 100), callback=None)
-    dpg.add_radio_button(
-        items=('w', 'w+'), pos=(130, 100), horizontal=True, default_value='w+',
-    )
-    dpg.add_button(label="generate", pos=(70, 120), callback=generate_image)
+    dpg.add_text('text', pos=(5, 100))
+    dpg.add_input_text(tag='text', width=100, pos=(70, 100))
+    dpg.add_button(label="reset", width=54, pos=(70, 120), callback=None)
+    dpg.add_button(label="generate", pos=(128, 120), callback=generate_image)
 
 posy += height + 2
 with dpg.window(
