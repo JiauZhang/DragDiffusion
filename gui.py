@@ -77,22 +77,6 @@ with dpg.window(
     )
 
     dpg.add_text('cache', pos=(5, 40))
-
-    def select_cb(sender, app_data):
-        selections = app_data['selections']
-        if selections:
-            for fn in selections:
-                model.load_ckpt(selections[fn])
-                break
-
-    def cancel_cb(sender, app_data):
-        ...
-
-    with dpg.file_dialog(
-        directory_selector=False, show=False, callback=select_cb, id='weight selector',
-        cancel_callback=cancel_cb, width=700 ,height=400
-    ):
-        dpg.add_file_extension('.*')
     dpg.add_input_text(tag='cache_dir', width=100, pos=(70, 40), default_value='./')
 
     dpg.add_text('latent', pos=(5, 60))

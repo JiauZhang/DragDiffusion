@@ -25,14 +25,9 @@ class DragDiffusion():
             cache_dir=cache_dir,
         ).to(device)
 
-    def load_ckpt(self, path):
-        print(f'loading checkpoint from {path}')
-        ...
-        print('loading checkpoint successed!')
-
     def to(self, device):
         if self._device != device:
-            ...
+            self.model = self.model.to(device)
             self._device = device
 
     @torch.no_grad()

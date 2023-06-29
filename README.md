@@ -5,7 +5,9 @@ Implementation of [DragDiffusion: Harnessing Diffusion Models for Interactive Po
 
 ```shell
 # gui
-pip install dearpygui diffusers==0.17.1
+pip install dearpygui gradio diffusers==0.17.1
 # run demo
 python gui.py
+# run web demo
+python webui.py
 ```
