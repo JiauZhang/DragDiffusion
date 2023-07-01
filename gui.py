@@ -13,7 +13,7 @@ dragging = False
 texture_format = dpg.mvFormat_Float_rgba
 image_width, image_height, rgb_channel, rgba_channel = 512, 512, 3, 4
 image_pixels = image_height * image_width
-model = None
+model, device = None, 'cpu'
 
 dpg.create_context()
 dpg.create_viewport(title='DragDiffusion', width=815, height=650)
@@ -35,19 +35,21 @@ def update_image(new_image):
         )
 
 def generate_image(sender, app_data, user_data):
-    global model
+    global device, model
     seed = dpg.get_value('seed')
     text = dpg.get_value('text')
 
     if model is None:
         cache_dir = dpg.get_value('cache_dir')
-        model = DragDiffusion('cpu', cache_dir)
+        model = DragDiffusion(device, cache_dir)
 
-    image = model.generate_image(seed, text)
+    image = model.generate_image(text, seed, 50).reshape(-1)
     update_image(image)
 
 def change_device(sender, app_data):
-    model.to(app_data)
+    global device, model
+    device = app_data
+    if model: model = model.to(device)
 
 def dragging_thread():
     global points, steps, dragging
