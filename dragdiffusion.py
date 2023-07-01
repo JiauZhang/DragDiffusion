@@ -31,11 +31,12 @@ class DragDiffusion():
             self._device = device
 
     @torch.no_grad()
-    def generate_image(self, prompt, seed):
-        z = torch.from_numpy(
-            np.random.RandomState(seed).randn(1, 512).astype(np.float32)
-        ).to(self._device)
-        return np.zeros((512, 512, 3))
+    def generate_image(self, prompt, seed, steps):
+        generator = torch.Generator(self._device).manual_seed(seed)
+        images = self.model(
+            prompt, generator=generator, num_inference_steps=steps,
+        ).images
+        return images[0]
 
     @property
     def device(self):
