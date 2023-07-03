@@ -6,7 +6,8 @@ device = 'cuda'
 cache_dir = './.cache/hf'
 model = DragDiffusion(device, cache_dir)
 add_point, points = 0, []
-point_color = [(255, 0, 0), (0, 0, 255)]
+point_color = [(255, 0, 0, 255), (0, 0, 255, 255)]
+MASK_VALUE = 125
 
 def add_point_cb():
     global add_point
@@ -43,7 +44,31 @@ def gen_box():
             drag_box()
     return prompt, seed, steps, gen_btn
 
-def draw_point(image, x, y, color, radius=2):
+def select_mask(image):
+    mask_ = image[..., -1]
+    mask_[mask_ == MASK_VALUE] = 255
+    image[..., -1] = mask_
+    return image
+
+def select_image(mask, image):
+    mask_ = mask['mask'][..., 0]
+    mask_[mask_ == 0] = MASK_VALUE
+    image[..., -1] = mask_
+    return image
+
+def image_mask_box():
+    with gr.Box():
+        with gr.Tab('image') as image_tab:
+            image = gr.Image(
+                type='numpy',value=np.ones((512, 512, 3)), image_mode='RGBA',
+            ).style(height=512, width=512)
+        with gr.Tab('mask') as mask_tab:
+            mask = gr.ImageMask().style(height=512, width=512)
+        image_tab.select(select_image, inputs=[mask, image], outputs=[image])
+        mask_tab.select(select_mask, inputs=[image], outputs=[mask])
+    return image, mask
+
+def draw_point(image, x, y, color, radius=3):
     x_start, x_end = max(0, x - radius), min(512, x + radius)
     y_start, y_end = max(0, y - radius), min(512, y + radius)
     for x in range(x_start, x_end):
@@ -64,7 +89,7 @@ def select_point(image, event: gr.SelectData):
 with gr.Blocks() as demo:
     with gr.Row():
         prompt, seed, steps, gen_btn = gen_box()
-        image = gr.Image(type='numpy', shape=(512, 512), value=np.ones((512, 512, 3)))
+        image, mask = image_mask_box()
         gen_btn.click(
             model.generate_image, inputs=[prompt, seed, steps], outputs=[image],
         )
