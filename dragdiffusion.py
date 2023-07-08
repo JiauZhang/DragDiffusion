@@ -24,7 +24,7 @@ class DragDiffusion():
             model_id, scheduler=ddim_scheduler, torch_dtype=torch.float32,
             cache_dir=cache_dir,
         ).to(device)
-        requires_grad(self.model, False)
+        requires_grad(self.model.unet, False)
 
     def to(self, device):
         if self._device != device:

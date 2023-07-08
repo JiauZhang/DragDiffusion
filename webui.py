@@ -25,14 +25,19 @@ def drag_box():
     start_btn = gr.Button(value='start', scale=1, min_width=20)
     stop_btn = gr.Button(value='stop', scale=1, min_width=20)
 
+# seed: 88937258, 893726, 893727, 853378485
+# prompt: ad for a burger with ham, patty, egg and lettuce leaf, freshly cooked with light smoke,
+# burger in the center of the frame in bright light, background flame fire darker, lens 50 mm f2.8
 def gen_box():
     with gr.Box():
         prompt = gr.Textbox(
-            label='Prompt', lines=1, value="Chinese Panda",
+            label='Prompt', lines=1, value="ad for a burger with ham, patty, egg and lettuce leaf, "
+            + "freshly cooked with light smoke, burger in the center of the frame in bright light, "
+            + "background flame fire darker, lens 50 mm f2.8",
         )
         with gr.Row():
             seed = gr.Number(
-                value=19491001, label='Seed', precision=0,
+                value=88937258, label='Seed', precision=0,
                 minimum=0, maximum=2147483647, interactive=True,
             )
             steps = gr.Number(
@@ -42,11 +47,11 @@ def gen_box():
             gen_btn = gr.Button(value='generate image', scale=1)
         with gr.Row():
             cfg_scale = gr.Slider(
-                value=0, label='CFG Scale', precision=0,
+                value=1, label='CFG Scale', precision=0,
                 minimum=1, maximum=100, interactive=True,
             )
             time_step = gr.Number(
-                value=0, label='Time Step', precision=0,
+                value=40, label='Time Step', precision=0,
                 minimum=1, maximum=50, interactive=True,
             )
         with gr.Row():
