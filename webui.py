@@ -41,8 +41,17 @@ def gen_box():
             )
             gen_btn = gr.Button(value='generate image', scale=1)
         with gr.Row():
+            cfg_scale = gr.Slider(
+                value=0, label='CFG Scale', precision=0,
+                minimum=1, maximum=100, interactive=True,
+            )
+            time_step = gr.Number(
+                value=0, label='Time Step', precision=0,
+                minimum=1, maximum=50, interactive=True,
+            )
+        with gr.Row():
             drag_box()
-    return prompt, seed, steps, gen_btn
+    return prompt, seed, steps, gen_btn, cfg_scale, time_step
 
 def select_mask(image):
     mask_ = image[..., -1]
@@ -88,10 +97,10 @@ def select_point(image, event: gr.SelectData):
 
 with gr.Blocks() as demo:
     with gr.Row():
-        prompt, seed, steps, gen_btn = gen_box()
+        prompt, seed, steps, gen_btn, cfg_scale, time_step = gen_box()
         image, mask = image_mask_box()
         gen_btn.click(
-            model.generate_image, inputs=[prompt, seed, steps], outputs=[image],
+            model.generate_image, inputs=[prompt, seed, steps, cfg_scale, time_step], outputs=[image],
         )
         image.select(select_point, inputs=[image], outputs=[image])
 

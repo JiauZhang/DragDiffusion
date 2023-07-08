@@ -24,6 +24,7 @@ class DragDiffusion():
             model_id, scheduler=ddim_scheduler, torch_dtype=torch.float32,
             cache_dir=cache_dir,
         ).to(device)
+        requires_grad(self.model, False)
 
     def to(self, device):
         if self._device != device:
@@ -31,10 +32,11 @@ class DragDiffusion():
             self._device = device
 
     @torch.no_grad()
-    def generate_image(self, prompt, seed, steps):
+    def generate_image(self, prompt, seed, steps, guidance_scale=7.5, time_step=40):
         generator = torch.Generator(self._device).manual_seed(seed)
         images = self.model(
             prompt, generator=generator, num_inference_steps=steps,
+            guidance_scale=guidance_scale, time_step=time_step,
         ).images
         return images[0]
 
