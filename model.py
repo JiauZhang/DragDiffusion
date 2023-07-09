@@ -35,7 +35,11 @@ class Diffusion(StableDiffusionPipeline):
         callback_steps: int = 1,
         cross_attention_kwargs: Optional[Dict[str, Any]] = None,
         time_step: int = 40,
+        dragging: bool = False,
     ):
+        if not dragging:
+            self.time_step = time_step
+
         # 0. Default height and width to unet
         height = height or self.unet.config.sample_size * self.vae_scale_factor
         width = width or self.unet.config.sample_size * self.vae_scale_factor
@@ -95,6 +99,12 @@ class Diffusion(StableDiffusionPipeline):
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
+                if dragging and i < self.time_step:
+                    progress_bar.update()
+                    continue
+                if not dragging and i == self.time_step:
+                    self.time_step_latent = latents.detach().clone()
+
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)

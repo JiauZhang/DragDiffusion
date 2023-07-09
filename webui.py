@@ -8,6 +8,7 @@ model = DragDiffusion(device, cache_dir)
 add_point, points = 0, []
 point_color = [(255, 0, 0, 255), (0, 0, 255, 255)]
 MASK_VALUE = 125
+dragging = False
 
 def add_point_cb():
     global add_point
@@ -17,6 +18,19 @@ def reset_point_cb():
     global points
     points = []
 
+def start_cb(image):
+    global points, steps, dragging
+    if dragging: return
+    dragging = True
+    while (dragging):
+        image = model.step(points)
+        yield image
+
+def stop_cb():
+    global dragging
+    dragging = False
+    print('stop dragging...')
+
 def drag_box():
     add_btn = gr.Button(value='add point', scale=1, min_width=20)
     add_btn.click(add_point_cb)
@@ -24,6 +38,8 @@ def drag_box():
     reset_btn.click(reset_point_cb)
     start_btn = gr.Button(value='start', scale=1, min_width=20)
     stop_btn = gr.Button(value='stop', scale=1, min_width=20)
+    stop_btn.click(stop_cb, queue=False)
+    return start_btn
 
 # seed: 88937258, 893726, 893727, 853378485
 # prompt: ad for a burger with ham, patty, egg and lettuce leaf, freshly cooked with light smoke,
@@ -55,8 +71,10 @@ def gen_box():
                 minimum=1, maximum=50, interactive=True,
             )
         with gr.Row():
-            drag_box()
-    return prompt, seed, steps, gen_btn, cfg_scale, time_step
+            start_btn = drag_box()
+    return (prompt, seed, steps, gen_btn, cfg_scale, time_step,
+        start_btn,
+    )
 
 def select_mask(image):
     mask_ = image[..., -1]
@@ -102,11 +120,12 @@ def select_point(image, event: gr.SelectData):
 
 with gr.Blocks() as demo:
     with gr.Row():
-        prompt, seed, steps, gen_btn, cfg_scale, time_step = gen_box()
+        prompt, seed, steps, gen_btn, cfg_scale, time_step, start_btn = gen_box()
         image, mask = image_mask_box()
-        gen_btn.click(
-            model.generate_image, inputs=[prompt, seed, steps, cfg_scale, time_step], outputs=[image],
-        )
-        image.select(select_point, inputs=[image], outputs=[image])
+    gen_btn.click(
+        model.generate_image, inputs=[prompt, seed, steps, cfg_scale, time_step], outputs=[image],
+    )
+    image.select(select_point, inputs=[image], outputs=[image])
+    start_btn.click(start_cb, inputs=[image], outputs=[image])
 
-demo.launch()
+demo.launch(enable_queue=True)
