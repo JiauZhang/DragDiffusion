@@ -23,8 +23,18 @@ def start_cb(image):
     if dragging: return
     dragging = True
     while (dragging):
-        image = model.step(points)
+        status, ret = model.step(points)
+        if status:
+            points, image = ret
+        else:
+            dragging = False
+            break
+        for i in range(len(points)):
+            print(points[i], type(image))
+            draw_point(image, *points[i], point_color[i%2])
         yield image
+    print('exit start_cb...')
+    return image
 
 def stop_cb():
     global dragging
@@ -103,9 +113,10 @@ def image_mask_box():
 def draw_point(image, x, y, color, radius=3):
     x_start, x_end = max(0, x - radius), min(512, x + radius)
     y_start, y_end = max(0, y - radius), min(512, y + radius)
+    channels = image.shape[-1]
     for x in range(x_start, x_end):
         for y in range(y_start, y_end):
-            image[y, x] = color
+            image[y, x] = color[:channels]
     return image
 
 def select_point(image, event: gr.SelectData):

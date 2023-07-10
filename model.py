@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from diffusers import StableDiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -104,6 +105,7 @@ class Diffusion(StableDiffusionPipeline):
                     continue
                 if not dragging and i == self.time_step:
                     self.time_step_latent = latents.detach().clone()
+                    self.prompt_embeds = prompt_embeds.detach().clone()
 
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
@@ -150,3 +152,19 @@ class Diffusion(StableDiffusionPipeline):
             return (image, has_nsfw_concept)
 
         return StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept)
+
+    def one_step(self, latents):
+        noise_pred = self.unet(
+            latents, self.time_step, encoder_hidden_states=self.prompt_embeds,
+            cross_attention_kwargs=None, return_dict=False,
+        )[0]
+        latents = self.scheduler.step(noise_pred, self.time_step, latents, return_dict=False)[0]
+        return latents
+
+    @torch.no_grad()
+    def latent_to_image(self, latents, guidance_scale=7.5, steps=50):
+        image = self.__call__(
+            prompt_embeds=self.prompt_embeds, dragging=True, latents=latents,
+            guidance_scale=guidance_scale, num_inference_steps=steps,
+        ).images[0]
+        return np.array(image)
