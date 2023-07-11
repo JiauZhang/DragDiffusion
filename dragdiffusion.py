@@ -98,7 +98,9 @@ class DragDiffusion():
             self.z_t = self.model.time_step_latent.detach().requires_grad_(True)
             self.optimizer = torch.optim.Adam([self.z_t], lr=2e-3)
             with torch.no_grad():
-                self.F0 = self.model.one_step(self.z_t).detach()
+                self.F0 = self.model.one_step(
+                    self.z_t, guidance_scale=self.guidance_scale, steps=self.steps,
+                ).detach()
             points = points[:len_pts]
             self.p0 = points[::2]
         self.optimizer.zero_grad()
