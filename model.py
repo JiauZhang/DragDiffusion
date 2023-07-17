@@ -154,12 +154,11 @@ class Diffusion(StableDiffusionPipeline):
         return StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept)
 
     def one_step(self, latents):
-        noise_pred = self.unet(
+        block_feature = self.unet_features(
             latents, self.time_step, encoder_hidden_states=self.prompt_embeds,
             cross_attention_kwargs=None, return_dict=False,
-        )[0]
-        latents = self.scheduler.step(noise_pred, self.time_step, latents, return_dict=False)[0]
-        return latents
+        )[1]
+        return block_feature
 
     @torch.no_grad()
     def latent_to_image(self, latents, guidance_scale=7.5, steps=50):
@@ -316,11 +315,11 @@ class Diffusion(StableDiffusionPipeline):
                 sample = upsample_block(
                     hidden_states=sample, temb=emb, res_hidden_states_tuple=res_samples, upsample_size=upsample_size
                 )
-
+        block_feature = sample
         # 6. post-process
         if self.conv_norm_out:
             sample = self.conv_norm_out(sample)
             sample = self.conv_act(sample)
         sample = self.conv_out(sample)
 
-        return (sample,)
+        return (sample, block_feature)
