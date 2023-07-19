@@ -156,7 +156,7 @@ class Diffusion(StableDiffusionPipeline):
     def one_step(self, latents):
         block_feature = self.unet_features(
             latents, self.time_step, encoder_hidden_states=self.prompt_embeds,
-            cross_attention_kwargs=None, return_dict=False,
+            cross_attention_kwargs=None,
         )[1]
         return block_feature
 
